@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:ANTHROPIC_API_KEY)",
+      "Bash(uv add *)",
+      "Bash(python *)",
+      "PowerShell($env:PYTHONUTF8=1; python exercise-groq.py)"
+    ]
+  }
+}
