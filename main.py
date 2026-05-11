@@ -1,11 +1,17 @@
 from dotenv import load_dotenv
+
+from typing import List
+from pydantic import BaseModel, Field
+
+from langgraph.prebuilt import create_react_agent
+
 from langchain.tools import tool
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage
-from langgraph.prebuilt import create_react_agent
+from langchain_tavily import TavilySearch
+
 from langfuse import get_client
 from langfuse.langchain import CallbackHandler
-from langchain_tavily import TavilySearch
 
 load_dotenv()
 
@@ -23,10 +29,28 @@ load_dotenv()
 #     print(f"Getting weather for {city}")
 #     return tavily.search(query=city)
 
+class Source(BaseModel):
+    """A single web source referenced by the agent when generating an answer."""
+
+    url: str = Field(description="The full URL of the web page used as a source")
+
+class AgentResponse(BaseModel):
+    """Structured response returned by the agent, containing the answer and the sources it was derived from."""
+
+    answer: str = Field(description="The agent's final answer to the user's query, synthesized from search results")
+    sources: List[Source] = Field(description="List of web sources referenced to generate the answer", default_factory=list)
 
 llm = ChatAnthropic(model="claude-opus-4-5")
-tools = [TavilySearch()]
-agent = create_react_agent(model=llm, tools=tools)
+tools = [TavilySearch(
+    max_results=5,              # Max search results to return
+    topic="general",            # Category of the search: "general", "news", or "finance"
+    search_depth="advanced",    # Depth of the search: "basic", "advanced", "fast", or "ultra-fast"
+    include_answer=True,        # Include a short answer to the original query in the results
+    include_raw_content="markdown",  # Include cleaned HTML content of each result as markdown
+    time_range=None,            # Filter by time: "day", "week", "month", "year", or None
+    include_images=False,       # Include query-related images in the response
+)]
+agent = create_react_agent(model=llm, tools=tools, response_format=AgentResponse)
 
 
 def main():
