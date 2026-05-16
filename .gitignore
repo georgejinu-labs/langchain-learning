@@ -1,0 +1,21 @@
+# Environment & secrets
+.env
+.env.*
+
+# Virtual environment
+.venv/
+
+# Claude Code
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.python-version
+
+# uv
+.uv/
+
+# VS Code
+.vscode/
