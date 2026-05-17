@@ -5,11 +5,10 @@ load_dotenv()
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
-from langfuse import observe
-from langfuse.langchain import CallbackHandler
+from langfuse.callback import CallbackHandler
 
 MAX_ITERATIONS = 10
-MODEL = "qwen3:latest"
+MODEL = "qwen3:1.7b"
 
 
 # --- Tools (LangChain @tool decorator) ---
@@ -36,15 +35,14 @@ def apply_discount(price: float, discount_tier: str) -> float:
 # --- Agent Loop ---
 
 
-@observe(name="LangChain Agent Loop")
 def run_agent(question: str):
     tools = [get_product_price, apply_discount]
     tools_dict = {t.name: t for t in tools}
 
+    langfuse_handler = CallbackHandler()
+
     llm = init_chat_model(f"ollama:{MODEL}", temperature=0)
     llm_with_tools = llm.bind_tools(tools)
-
-    langfuse_handler = CallbackHandler()
 
     print(f"Question: {question}")
     print("=" * 60)
@@ -111,4 +109,3 @@ if __name__ == "__main__":
     print("Hello LangChain Agent (.bind_tools)!")
     print()
     result = run_agent("What is the price of a laptop after applying a gold discount?")
-    print(f"\nResult: {result}")
